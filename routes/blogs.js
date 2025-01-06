@@ -1,6 +1,38 @@
 const blogController = require('../controller/blogs');
 
 //Validations
+const getAllBlogsValidation = {
+    queryString: {
+        type: 'object',
+        properties: {
+            page: { type: 'integer', minimum: 1 },
+            limit: { type: 'integer', minimum: 1 },
+        }
+    },
+    response: {
+        200: {
+            type: 'object',
+            properties: { //pagination properties
+                page: { type: 'integer' },
+                limit: { type: 'integer' },
+                total: { type: 'integer' },
+                totalPages: { type: 'integer' },
+                data: { //array of blogs
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            id: { type: 'integer' },
+                            title: { type: 'string' }
+                        },
+                        required: ['id', 'title']
+                    }
+                }
+            }
+        }
+    }
+}
+
 const getBlogValidation = {
     params: {
         type: 'object',
@@ -95,6 +127,7 @@ const routes = [
     {
         method: 'GET',
         url: '/allBlogs',
+        schema: getAllBlogsValidation,
         handler: blogController.getAllBlogs
     },
     {

@@ -13,14 +13,24 @@ describe('Fastify API Tests', () => {
         expect(response.json()).toEqual({ hello: 'world' });
     });
 
-    it('GET /allBlogs should return an array', async () => {
+    it('GET /allBlogs should return paginated results', async () => {
         const response = await app.inject({
             method: 'GET',
-            url: '/allBlogs',
+            url: '/allBlogs?page=1&limit=2'
         });
 
         expect(response.statusCode).toBe(200);
-        expect(Array.isArray(response.json())).toBe(true);
+
+        const jsonResponse = response.json();
+        expect(jsonResponse).toMatchObject({
+            page: 1,
+            limit: 2,
+            total: expect.any(Number),
+            totalPages: expect.any(Number),
+            data: expect.any(Array)
+        });
+
+        expect(jsonResponse.data.length).toBeLessThanOrEqual(2); // Ensure it doesn't exceed the limit 2
     });
 
     it('GET /allBlogs/:id should return a single blog', async () => {
@@ -104,15 +114,15 @@ describe('Fastify API Tests', () => {
         // Fetch all existing blogs
         const getResponse = await app.inject({
             method: 'GET',
-            url: '/allBlogs',
+            url: '/allBlogs?page=1&limit=2',
         });
 
         expect(getResponse.statusCode).toBe(200);
-        const blogs = getResponse.json();
+        const responseData  = getResponse.json();
+        expect(responseData).toHaveProperty('data');
+        expect(responseData.data.length).toBeGreaterThan(0);
 
-        expect(blogs.length).toBeGreaterThan(0); // Ensure at least one blog exists
-
-        const existingBlog = blogs[0];
+        const existingBlog = responseData.data[0];
 
         // Delete that blog
         const deleteResponse = await app.inject({
