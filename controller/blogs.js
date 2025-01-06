@@ -34,24 +34,50 @@ let blogs = [
 
 //Paginated get all blogs
 const getAllBlogs = (req, reply) => {
-    let {page, limit} = req.query;
-    page = Number(page);
-    limit = Number(limit);
+    let {page, limit, search, sort, minId, maxId} = req.query;
+
+    page = Number(page) || 1;
+    limit = Number(limit) || 1;
 
     if(page < 1 || limit < 1) {
         reply.code(400).send({ error: 'Bad Request', message: 'Page and limit must be positive numbers' })
     }
+    let filteredBlogs = [...blogs]
 
+    //Case: Search
+    if(search) {
+        filteredBlogs = filteredBlogs.filter(blog => blog.title.toLowerCase().includes(search.toLowerCase()))
+    }
+    //Case: Sort
+    if(sort) {
+        filteredBlogs = filteredBlogs.sort((a, b) => {
+            if(sort === 'asc') {
+                return a.title.localeCompare(b.title)
+            } else {
+                return b.title.localeCompare(a.title)
+            }
+        })
+    }
+    //Case: Filter
+    minId = minId ? Number(minId) : null;
+    maxId = maxId ? Number(maxId) : null;
+    if(minId !== null) {
+        filteredBlogs = filteredBlogs.filter(blog => blog.id >= minId)
+    }
+    if(maxId !== null) {
+        filteredBlogs = filteredBlogs.filter(blog => blog.id <= maxId)
+    }
+
+    //Pagination
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-
-    const paginatedBlogs = blogs.slice(startIndex, endIndex);
+    const paginatedBlogs = filteredBlogs.slice(startIndex, endIndex);
 
     return reply.code(200).send({
         page,
         limit,
-        total: blogs.length,
-        totalPages: Math.ceil(blogs.length / limit),
+        total: filteredBlogs.length,
+        totalPages: Math.ceil(filteredBlogs.length / limit),
         data: paginatedBlogs
     });
 }

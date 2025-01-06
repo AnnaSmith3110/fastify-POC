@@ -7,6 +7,10 @@ const getAllBlogsValidation = {
         properties: {
             page: { type: 'integer', minimum: 1 },
             limit: { type: 'integer', minimum: 1 },
+            search: { type: 'string' },
+            sort: { type: 'string', enum: ['asc', 'desc'] },
+            minId: { type: 'integer' },
+            maxId: { type: 'integer' }
         }
     },
     response: {
@@ -28,7 +32,8 @@ const getAllBlogsValidation = {
                         required: ['id', 'title']
                     }
                 }
-            }
+            },
+            required: ['page', 'limit', 'total', 'totalPages', 'data']
         }
     }
 }

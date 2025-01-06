@@ -33,6 +33,106 @@ describe('Fastify API Tests', () => {
         expect(jsonResponse.data.length).toBeLessThanOrEqual(2); // Ensure it doesn't exceed the limit 2
     });
 
+    it('GET /allBlogs should return search results', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/allBlogs?search=fastify'
+        });
+
+        expect(response.statusCode).toBe(200);
+
+        const jsonResponse = response.json();
+        expect(jsonResponse).toHaveProperty('data');
+        expect(jsonResponse.data).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    title: expect.stringMatching(/fastify/i)
+                })
+            ])
+        );
+    });
+
+    it('GET /allBlogs should return sorted results (asc)', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/allBlogs?sort=asc'
+        });
+
+        expect(response.statusCode).toBe(200);
+
+        const jsonResponse = response.json();
+        const titles = jsonResponse.data.map(blog => blog.title);
+        //Check that titles are sorted in ascending order
+        expect(titles).toEqual([...titles].sort());
+    });
+
+    it('GET /allBlogs should return sorted results (desc)', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/allBlogs?sort=desc'
+        });
+
+        expect(response.statusCode).toBe(200);
+
+        const jsonResponse = response.json();
+        const titles = jsonResponse.data.map(blog => blog.title);
+        //Check that titles are sorted in descending order
+        expect(titles).toEqual([...titles].sort().reverse());
+    });
+
+    it('GET /allBlogs should return filtered results by ID range', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/allBlogs?minId=5&maxId=15'
+        });
+
+        expect(response.statusCode).toBe(200);
+
+        const jsonResponse = response.json();
+        expect(jsonResponse.data).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: expect.any(Number)
+                })
+            ])
+        );
+
+        expect(jsonResponse.data.every(blog => blog.id >= 5 && blog.id <= 15)).toBe(true);
+    });
+
+    it('GET /allBlogs should return paginated, sorted, and filtered search results', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/allBlogs?page=1&limit=3&search=fastify&sort=asc&minId=5&maxId=20'
+        });
+
+        expect(response.statusCode).toBe(200);
+
+        const jsonResponse = response.json();
+
+        // Ensure response contains correct structure
+        expect(jsonResponse).toHaveProperty('page', 1);
+        expect(jsonResponse).toHaveProperty('limit', 3);
+        expect(jsonResponse).toHaveProperty('totalPages', expect.any(Number));
+        expect(jsonResponse).toHaveProperty('data');
+
+        // Validate returned blog posts
+        expect(jsonResponse.data.length).toBeLessThanOrEqual(3); // Should not exceed limit
+
+        jsonResponse.data.forEach(blog => {
+            // Ensure search term is in the title
+            expect(blog.title.toLowerCase()).toContain('fastify');
+
+            // Ensure ID is within the min/max range
+            expect(blog.id).toBeGreaterThanOrEqual(5);
+            expect(blog.id).toBeLessThanOrEqual(20);
+        });
+
+        // Ensure sorting is correct (ascending order by title)
+        const titles = jsonResponse.data.map(blog => blog.title);
+        expect(titles).toEqual([...titles].sort());
+    });
+
     it('GET /allBlogs/:id should return a single blog', async () => {
         const response = await app.inject({
             method: 'GET',
@@ -118,7 +218,7 @@ describe('Fastify API Tests', () => {
         });
 
         expect(getResponse.statusCode).toBe(200);
-        const responseData  = getResponse.json();
+        const responseData = getResponse.json();
         expect(responseData).toHaveProperty('data');
         expect(responseData.data.length).toBeGreaterThan(0);
 
