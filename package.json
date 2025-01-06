@@ -1,0 +1,19 @@
+{
+  "name": "api-poc",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/env": "^3.0.0",
+    "fastify": "^5.2.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8"
+  }
+}
