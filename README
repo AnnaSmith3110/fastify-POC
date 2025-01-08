@@ -1,4 +1,9 @@
 LEARNT:
-schema validation
-testing with vitest and inject
-http respo validation - 200, 400 etc
+1. Basic CRUD operations
+2. Pagination
+3. Search, sort and filter
+4. Testing with vitest and fastify inject
+5. Schema validation
+6. HTTP responses
+7. Dockerization
+8. Deploying to cloud run
